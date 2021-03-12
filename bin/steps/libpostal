@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# shellcheck source=bin/utils
+source "$BIN_DIR/utils"
+
+libpostal_install() {
+  HEROKU_PYTHON_DIR="$1"
+  HEADERS_ONLY="$3"
+
+  mkdir -p "$HEROKU_PYTHON_DIR"
+
+  git clone https://github.com/openvenues/libpostal --depth 1
+  cd libpostal/
+  ./bootstrap.sh
+  ./configure --prefix=$HEROKU_PYTHON_DIR/libpostal --datadir=$HEROKU_PYTHON_DIR/libpostal/datadir
+
+  make
+  make install
+
+  mkdir -p "$HEROKU_PYTHON_DIR/include"
+  mkdir -p "$HEROKU_PYTHON_DIR/lib"
+
+  # copy over libpostal headers & bins and setup linking against the stack image library
+  mv "$HEROKU_PYTHON_DIR/libpostal/include/"* "$HEROKU_PYTHON_DIR/include/"
+  mv "$HEROKU_PYTHON_DIR/libpostal/lib/x86_64-linux-gnu"/libpostal.*a "$HEROKU_PYTHON_DIR/lib/"
+  mkdir -p "$HEROKU_PYTHON_DIR/lib/pkgconfig"
+  # set the right prefix/lib directories
+  sed -e 's/prefix=\/usr/prefix=\/app\/.heroku\/python/' -e 's/\/x86_64-linux-gnu//' "$HEROKU_PYTHON_DIR/libpostal/lib/x86_64-linux-gnu/pkgconfig/libpostal.pc" > "$HEROKU_PYTHON_DIR/lib/pkgconfig/libpostal.pc"
+  
+  if [ -z "$HEADERS_ONLY" ]; then
+    mv "$HEROKU_PYTHON_DIR/libpostal/bin"/* "$HEROKU_PYTHON_DIR/bin/"
+  fi
+
+}
+
+buildpack_libpostal_install() {
+  HEROKU_PYTHON_DIR="$BUILD_DIR/.heroku/python"
+
+  puts-step "Installing libpostal"
+
+  if libpostal_install "$BUILD_DIR/.heroku/python" ; then
+    mcount "success.python.libpostal"
+  else
+    echo "libpostal failed to install."
+    mcount "failure.python.libpostal"
+  fi
+
+  mkdir -p "$CACHE_DIR/.heroku/"
+}

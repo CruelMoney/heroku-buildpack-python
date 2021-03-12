@@ -172,16 +172,6 @@ export PIP_NO_PYTHON_VERSION_WARNING=1
 cd "$BUILD_DIR"
 
 
-
-git clone https://github.com/openvenues/libpostal --depth 1
-cd libpostal/
-./bootstrap.sh
-./configure --prefix=$BUILD_DIR/libpostal --datadir=$BUILD_DIR/libpostal
-
-make
-make install
-
-
 # The Cache
 # ---------
 
@@ -299,6 +289,14 @@ source "$BIN_DIR/steps/eggpath-fix"
 source "$BIN_DIR/steps/sqlite3"
 buildpack_sqlite3_install
 mtime "sqlite3.install.time" "${start}"
+
+
+
+# libpostal
+source "$BIN_DIR/steps/libpostal"
+buildpack_libpostal_install
+
+
 
 # pip install
 # -----------
