@@ -32,6 +32,13 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
 
+
+
+
+
+
+
+
 # Export Path variables, for use in sub-scripts.
 export BUILD_DIR CACHE_DIR ENV_DIR
 
@@ -163,6 +170,17 @@ export PIP_NO_PYTHON_VERSION_WARNING=1
 
 # Switch to the repo's context.
 cd "$BUILD_DIR"
+
+
+
+git clone https://github.com/openvenues/libpostal --depth 1
+cd libpostal/
+./bootstrap.sh
+./configure --prefix=$BUILD_DIR/libpostal --datadir=$BUILD_DIR/libpostal
+
+make
+make install
+
 
 # The Cache
 # ---------
